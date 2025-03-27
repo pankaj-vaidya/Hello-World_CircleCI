@@ -10,5 +10,5 @@ import { ToastrModule } from 'ngx-toastr';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'Hello';
+  title = 'Hello, ngApp';
 }
