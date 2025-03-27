@@ -42,6 +42,6 @@ describe('AppComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const eventsLink = compiled.querySelector('a.nav-link[routerLink="/events"]') as HTMLElement;
     const fontWeight = window.getComputedStyle(eventsLink).getPropertyValue('font-weight');
-    expect(fontWeight).toBe('700'); // or 'bold' in some browsers
+    expect(fontWeight).toBe('700');
   });
 });
