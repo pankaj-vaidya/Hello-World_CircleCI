@@ -4,6 +4,8 @@ executors:
   node-executor:
     docker:
       - image: cimg/node:18.19.1  # Use Node.js 18.17 (latest stable version in cimg namespace)
+    environment:
+      PATH: /workspace/sonar-scanner-4.8.0.2856-linux/bin:$PATH  # Set the sonar-scanner path globally
 
 jobs:
   install:
@@ -47,10 +49,10 @@ jobs:
       - run:
           name: Install SonarQube Scanner
           command: |
-            # Download and install SonarQube Scanner
+            # Download and install SonarQube Scanner for Linux
             curl -sSLo sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
             unzip sonar-scanner-cli.zip
-            export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+            export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH  # Add sonar-scanner to PATH
       - run:
           name: Run SonarQube Scanner
           command: |
