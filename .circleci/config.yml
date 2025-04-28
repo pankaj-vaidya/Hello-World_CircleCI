@@ -44,7 +44,22 @@ jobs:
       - run:
           name: Run Unit Tests
           command: npm test -- --watch=false --browsers=ChromeHeadless
-
+      - run:
+          name: Install SonarQube Scanner
+          command: |
+            # Download and install SonarQube Scanner
+            curl -sSLo sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+            unzip sonar-scanner-cli.zip
+            export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+      - run:
+          name: Run SonarQube Scanner
+          command: |
+            # Run sonar-scanner with your configuration
+            sonar-scanner \
+              -Dsonar.projectKey=AngularApp \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=http://localhost:9002 \
+              -Dsonar.token=$SONAR_TOKEN
   build:
     executor: node-executor
     steps:
