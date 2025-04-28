@@ -57,9 +57,10 @@ jobs:
           command: |
             export PATH="$PATH:$PWD/sonar-scanner-4.6.2.2472-linux/bin"
             sonar-scanner \
-            -Dsonar.projectKey=$CIRCLE_BRANCH:$CIRCLE_PROJECT_REPONAME \
-            -Dsonar.host.url=https://sonarqube.com/ \
-            -Dsonar.login=$SONAR_TOKEN  
+             -Dsonar.projectKey=AngularApp \
+             -Dsonar.sources=. \
+             -Dsonar.host.url=http://localhost:9002 \
+             -Dsonar.token=$SONAR_TOKEN 
   build:
     executor: node-executor
     steps:
