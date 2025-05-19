@@ -1,31 +1,30 @@
 version: 2.1
 
 orbs:
-  sonarcloud: sonarsource/sonarcloud@2.0.0
-
-executors:
-  node-executor:
-    docker:
-      - image: cimg/node:18.19.1
+  node: circleci/node@5.1.0
 
 jobs:
-  build-and-scan:
-    executor: node-executor
+  test-and-analyze:
+    docker:
+      - image: cimg/node:18.17
     steps:
       - checkout
+      - node/install-packages:
+          pkg-manager: npm
       - run:
-          name: Install Dependencies
-          command: npm ci
+          name: Run Angular Tests and Generate Coverage
+          command: npm run test -- --watch=false --code-coverage
       - run:
-          name: Build Angular App
-          command: npm run build -- --configuration=production
+          name: Install SonarScanner
+          command: npm install -g sonar-scanner
       - run:
-          name: Run Tests with Coverage
-          command: npm test -- --watch=false --code-coverage
-      - sonarcloud/scan
+          name: Run SonarCloud Analysis
+          command: |
+            sonar-scanner \
+              -Dsonar.login=$SONAR_TOKEN
 
 workflows:
   version: 2
-  build-analyze:
+  test-and-analyze:
     jobs:
-      - build-and-scan
+      - test-and-analyze
