@@ -1,29 +1,72 @@
 version: 2.1
 
-orbs:
-  node: circleci/node@5.1.0
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:18.19.1  # Use Node.js 18.17 (latest stable version in cimg namespace)
 
 jobs:
-  test-and-analyze:
-    docker:
-      - image: cimg/node:18.20  # Updated Node.js version
+  install:
+    executor: node-executor
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+            - v1-dependencies-
       - run:
           name: Install Dependencies
-          command: npm ci
+          command: npm install
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+
+  test:
+    executor: node-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-
       - run:
-          name: Run Tests
-          command: npm run test -- --watch=false --code-coverage
+          name: Install Chrome
+          command: |
+            sudo apt update
+            sudo apt install -y wget curl
+            wget -qO - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+            sudo apt update
+            sudo apt install -y google-chrome-stable
       - run:
-          name: Install SonarScanner
-          command: npm install -g sonar-scanner
+          name: Set CHROME_BIN Environment Variable
+          command: echo 'export CHROME_BIN=/usr/bin/google-chrome' >> $BASH_ENV
       - run:
-          name: Run SonarCloud Analysis
-          command: sonar-scanner -Dsonar.login=$SONAR_TOKEN
+          name: Run Unit Tests
+          command: npm test -- --watch=false --browsers=ChromeHeadless 
+  build:
+    executor: node-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-
+      - run:
+          name: Build Angular App
+          command: npm run build -- --configuration=production
+      - persist_to_workspace:
+          root: dist
+          paths:
+            - "**"
 
 workflows:
   version: 2
-  test-and-analyze:
+  ci_pipeline:
     jobs:
-      - test-and-analyze
+      - install
+      - test:
+          requires:
+            - install
+      - build:
+          requires:
+            - test
