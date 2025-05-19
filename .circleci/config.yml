@@ -1,89 +1,31 @@
 version: 2.1
 
+orbs:
+  sonarcloud: sonarsource/sonarcloud@2.0.0
+
 executors:
   node-executor:
     docker:
-      - image: cimg/node:18.19.1  # Use Node.js 18.17 (latest stable version in cimg namespace)
+      - image: cimg/node:18.19.1
 
 jobs:
-  install:
+  build-and-scan:
     executor: node-executor
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package-lock.json" }}
-            - v1-dependencies-
       - run:
           name: Install Dependencies
-          command: npm install
-      - save_cache:
-          key: v1-dependencies-{{ checksum "package-lock.json" }}
-          paths:
-            - node_modules
-
-  test:
-    executor: node-executor
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-
-      - run:
-          name: Install Chrome
-          command: |
-            sudo apt update
-            sudo apt install -y wget curl
-            wget -qO - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-            sudo apt update
-            sudo apt install -y google-chrome-stable
-      - run:
-          name: Set CHROME_BIN Environment Variable
-          command: echo 'export CHROME_BIN=/usr/bin/google-chrome' >> $BASH_ENV
-      - run:
-          name: Run Unit Tests
-          command: npm test -- --watch=false --browsers=ChromeHeadless
-      - run:
-          name: Install Sonarqube scanner 
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y openjdk-11-jdk
-            wget -O sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
-            unzip sonar-scanner.zip
-            rm sonar-scanner.zip
-      - run:
-          name: Run SonarQube Scanner
-          command: |
-            export PATH="$PATH:$PWD/sonar-scanner-4.6.2.2472-linux/bin"
-            sonar-scanner \
-             -Dsonar.projectKey=AngularApp \
-             -Dsonar.sources=. \
-             -Dsonar.host.url=http://localhost:9002 \
-             -Dsonar.token=$SONAR_TOKEN 
-  build:
-    executor: node-executor
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-
+          command: npm ci
       - run:
           name: Build Angular App
           command: npm run build -- --configuration=production
-      - persist_to_workspace:
-          root: dist
-          paths:
-            - "**"
+      - run:
+          name: Run Tests with Coverage
+          command: npm test -- --watch=false --code-coverage
+      - sonarcloud/scan
 
 workflows:
   version: 2
-  ci_pipeline:
+  build-analyze:
     jobs:
-      - install
-      - test:
-          requires:
-            - install
-      - build:
-          requires:
-            - test
+      - build-and-scan
