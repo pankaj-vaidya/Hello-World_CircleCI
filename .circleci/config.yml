@@ -77,8 +77,8 @@ jobs:
       - run:
           name: Run SonarCloud Analysis
           command: |
-            sonar-scanner \
-              -Dsonar.login=$SONAR_TOKEN
+            chmod +x /usr/local/lib/node_modules/sonar-scanner/bin/sonar-scanner
+            sonar-scanner -Dsonar.login=$SONAR_TOKEN
 
 workflows:
   version: 2
