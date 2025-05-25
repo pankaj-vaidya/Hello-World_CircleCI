@@ -42,7 +42,7 @@ jobs:
           name: Set CHROME_BIN
           command: echo 'export CHROME_BIN=/usr/bin/google-chrome' >> $BASH_ENV
       - run:
-          name: Run Unit Tests
+          name: Run Unit Tests with Code Coverage
           command: npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
       - persist_to_workspace:
           root: .
@@ -64,7 +64,8 @@ jobs:
               -Dsonar.projectKey=pankaj-vaidya_Hello-World_CircleCI \
               -Dsonar.organization=pankaj-vaidya \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.token=$SONAR_TOKEN
+              -Dsonar.token=$SONAR_TOKEN \
+              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 
 workflows:
   version: 2
