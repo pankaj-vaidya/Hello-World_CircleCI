@@ -1,0 +1,3 @@
+.nav-link[routerLink="/events"] {
+    font-weight: bold;
+  }

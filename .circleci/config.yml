@@ -1,0 +1,79 @@
+version: 2.1
+
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:18.19.1-browsers  # Includes Chrome pre-installed
+
+jobs:
+  install:
+    executor: node-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+            - v1-dependencies-
+      - run:
+          name: Install Dependencies
+          command: npm ci
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+
+  test:
+    executor: node-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-
+      - run:
+          name: Install Chrome
+          command: |
+            sudo apt update
+            sudo apt install -y wget curl
+            wget -qO - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+            sudo apt update
+            sudo apt install -y google-chrome-stable
+      - run:
+          name: Set CHROME_BIN
+          command: echo 'export CHROME_BIN=/usr/bin/google-chrome' >> $BASH_ENV
+      - run:
+          name: Run Unit Tests
+          command: npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
+      - persist_to_workspace:
+          root: .
+          paths:
+            - coverage
+            - sonar-project.properties
+
+  sonar-analysis:
+    docker:
+      - image: sonarsource/sonar-scanner-cli:latest
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run SonarCloud Analysis
+          command: |
+            sonar-scanner \
+              -Dsonar.projectKey=pankaj-vaidya_Hello-World_CircleCI \
+              -Dsonar.organization=pankaj-vaidya \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.token=$SONAR_TOKEN
+
+workflows:
+  version: 2
+  ci_pipeline:
+    jobs:
+      - install
+      - test:
+          requires:
+            - install
+      - sonar-analysis:
+          requires:
+            - test
