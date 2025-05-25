@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: cimg/node:18.19.1  # Updated to meet Angular CLI requirements
+      - image: cimg/node:18.19.1-browsers  # Includes Chrome pre-installed
 
 jobs:
   install:
@@ -59,7 +59,12 @@ jobs:
           at: .
       - run:
           name: Run SonarCloud Analysis
-          command: sonar-scanner -Dsonar.login=$SONAR_TOKEN
+          command: |
+            sonar-scanner \
+              -Dsonar.projectKey=ng-app \
+              -Dsonar.organization=ng app \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.token=$SONAR_TOKEN
 
 workflows:
   version: 2
