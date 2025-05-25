@@ -61,8 +61,8 @@ jobs:
           name: Run SonarCloud Analysis
           command: |
             sonar-scanner \
-              -Dsonar.projectKey=ng-app \
-              -Dsonar.organization=ng app \
+              -Dsonar.projectKey=pankaj-vaidya_Hello-World_CircleCI \
+              -Dsonar.organization=pankaj-vaidya \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.token=$SONAR_TOKEN
 
