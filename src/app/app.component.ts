@@ -11,4 +11,8 @@ import { ToastrModule } from 'ngx-toastr';
 })
 export class AppComponent {
   title = 'Hello, ngApp';
+  
+  onButtonClick() {
+  console.log('Button clicked!');
+}
 }
