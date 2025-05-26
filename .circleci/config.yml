@@ -101,4 +101,4 @@ workflows:
             - install
       - sonar-analysis:
           requires:
-            - test
+            - test 
