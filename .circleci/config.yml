@@ -58,6 +58,17 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Fix LCOV Paths for SonarCloud
+          command: |
+            if [ -f coverage/lcov.info ]; then
+              echo "Fixing LCOV paths..."
+              sed -i 's|SF:.*/src|SF:src|' coverage/lcov.info
+              head -n 10 coverage/lcov.info
+            else
+              echo "lcov.info not found"
+              exit 1
+            fi
+      - run:
           name: Run SonarCloud Analysis
           command: |
             sonar-scanner \
@@ -65,10 +76,12 @@ jobs:
               -Dsonar.organization=pankaj-vaidya \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.token=$SONAR_TOKEN \
-               -Dsonar.sources=src \
+              -Dsonar.sources=src \
               -Dsonar.inclusions=src/**/*.ts \
               -Dsonar.exclusions=**/*.spec.ts \
-              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+              -Dsonar.qualitygate.wait=true \
+              -Dsonar.coverage=80
 
 workflows:
   version: 2
