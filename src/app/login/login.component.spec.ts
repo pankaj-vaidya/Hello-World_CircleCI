@@ -40,4 +40,32 @@ describe('LoginComponent', () => {
     expect(localStorage.getItem('token')).toBe('mockToken');
     expect(routerMock.navigate).toHaveBeenCalledWith(['/special']);
   });
+  it('should log an error when loginUser fails', () => {
+    const error = { message: 'Login failed' };
+    authServiceMock.loginUser.and.returnValue(of(error));
+  
+    spyOn(console, 'log');
+    component.loginUser();
+  
+    expect(authServiceMock.loginUser).toHaveBeenCalledWith(component.loginUserData);
+    expect(console.log).toHaveBeenCalledWith(error);
+  });
+  it('should create the component and initialize dependencies', () => {
+    expect(component).toBeTruthy();
+    expect(component['_auth']).toBeTruthy();
+    expect(component['_router']).toBeTruthy();
+  });
+  it('should bind loginUserData to the form inputs', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const emailInput = compiled.querySelector('input[name="email"]') as HTMLInputElement;
+    const passwordInput = compiled.querySelector('input[name="password"]') as HTMLInputElement;
+  
+    emailInput.value = 'test@example.com';
+    passwordInput.value = 'password123';
+    emailInput.dispatchEvent(new Event('input'));
+    passwordInput.dispatchEvent(new Event('input'));
+  
+    expect(component.loginUserData.email).toBe('test@example.com');
+    expect(component.loginUserData.password).toBe('password123');
+  });
 });
